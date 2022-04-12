@@ -74,7 +74,7 @@ class Predictor(object):
     def visualize(self, dets, meta, class_names, score_thres, wait=0):
         time1 = time.time()
         result_img = self.model.head.show_result(
-            meta["raw_img"][0], dets, class_names, score_thres=score_thres, show=True
+            meta["raw_img"][0], dets, class_names, score_thres=score_thres, show=False
         )
         print("viz time: {:.3f}s".format(time.time() - time1))
         return result_img
@@ -118,9 +118,9 @@ def main():
                 mkdir(local_rank, save_folder)
                 save_file_name = os.path.join(save_folder, os.path.basename(image_name))
                 cv2.imwrite(save_file_name, result_image)
-            ch = cv2.waitKey(0)
-            if ch == 27 or ch == ord("q") or ch == ord("Q"):
-                break
+            # ch = cv2.waitKey(0)
+            # if ch == 27 or ch == ord("q") or ch == ord("Q"):
+            #     break
     elif args.demo == "video" or args.demo == "webcam":
         cap = cv2.VideoCapture(args.path if args.demo == "video" else args.camid)
         width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float

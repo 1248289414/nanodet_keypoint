@@ -95,7 +95,7 @@ class NanoDetPlusHead(nn.Module):
             [
                 nn.Conv2d(
                     self.feat_channels,
-                    self.num_classes + 4 * (self.reg_max + 1),
+                    self.num_classes + 8 * (self.reg_max + 1),
                     1,
                     padding=0,
                 )
@@ -181,7 +181,7 @@ class NanoDetPlusHead(nn.Module):
         center_priors = torch.cat(mlvl_center_priors, dim=1)
 
         cls_preds, reg_preds = preds.split(
-            [self.num_classes, 4 * (self.reg_max + 1)], dim=-1
+            [self.num_classes, 8 * (self.reg_max + 1)], dim=-1
         )
         dis_preds = self.distribution_project(reg_preds) * center_priors[..., 2, None]
         decoded_bboxes = distance2bbox(center_priors[..., :2], dis_preds)
@@ -189,7 +189,7 @@ class NanoDetPlusHead(nn.Module):
         if aux_preds is not None:
             # use auxiliary head to assign
             aux_cls_preds, aux_reg_preds = aux_preds.split(
-                [self.num_classes, 4 * (self.reg_max + 1)], dim=-1
+                [self.num_classes, 8 * (self.reg_max + 1)], dim=-1
             )
             aux_dis_preds = (
                 self.distribution_project(aux_reg_preds) * center_priors[..., 2, None]
@@ -238,7 +238,8 @@ class NanoDetPlusHead(nn.Module):
         label_scores = torch.cat(label_scores, dim=0)
         bbox_targets = torch.cat(bbox_targets, dim=0)
         cls_preds = cls_preds.reshape(-1, self.num_classes)
-        reg_preds = reg_preds.reshape(-1, 4 * (self.reg_max + 1))
+        reg_preds = reg_preds.reshape(-1, 8 * (self.reg_max + 1))
+        reg_preds = reg_preds[..., :4 * (self.reg_max + 1)]
         decoded_bboxes = decoded_bboxes.reshape(-1, 4)
         loss_qfl = self.loss_qfl(
             cls_preds, (labels, label_scores), avg_factor=num_total_samples
@@ -369,7 +370,7 @@ class NanoDetPlusHead(nn.Module):
             meta (dict): Meta info.
         """
         cls_scores, bbox_preds = preds.split(
-            [self.num_classes, 4 * (self.reg_max + 1)], dim=-1
+            [self.num_classes, 8 * (self.reg_max + 1)], dim=-1
         )
         result_list = self.get_bboxes(cls_scores, bbox_preds, meta)
         det_results = {}
@@ -510,7 +511,7 @@ class NanoDetPlusHead(nn.Module):
                 feat = conv(feat)
             output = gfl_cls(feat)
             cls_pred, reg_pred = output.split(
-                [self.num_classes, 4 * (self.reg_max + 1)], dim=1
+                [self.num_classes, 8 * (self.reg_max + 1)], dim=1
             )
             cls_pred = cls_pred.sigmoid()
             out = torch.cat([cls_pred, reg_pred], dim=1)
