@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 
 from ...loss.iou_loss import bbox_overlaps
+from ...loss.wing_loss import distance_cost
 from .assign_result import AssignResult
 from .base_assigner import BaseAssigner
 
@@ -25,7 +26,9 @@ class DynamicSoftLabelAssigner(BaseAssigner):
         pred_scores,
         priors,
         decoded_bboxes,
+        decoded_keypoints,
         gt_bboxes,
+        gt_keypoints,
         gt_labels,
     ):
         """Assign gt to priors with dynamic soft label assignment.
@@ -60,6 +63,7 @@ class DynamicSoftLabelAssigner(BaseAssigner):
         valid_mask = is_in_gts.sum(dim=1) > 0
 
         valid_decoded_bbox = decoded_bboxes[valid_mask]
+        valid_decoded_keypoints = decoded_keypoints[valid_mask]
         valid_pred_scores = pred_scores[valid_mask]
         num_valid = valid_decoded_bbox.size(0)
 
@@ -82,6 +86,8 @@ class DynamicSoftLabelAssigner(BaseAssigner):
         pairwise_ious = bbox_overlaps(valid_decoded_bbox, gt_bboxes)
         iou_cost = -torch.log(pairwise_ious + 1e-7)
 
+        dis_cost = distance_cost(valid_decoded_keypoints, gt_keypoints)
+
         gt_onehot_label = (
             F.one_hot(gt_labels.to(torch.int64), pred_scores.shape[-1])
             .float()
@@ -99,7 +105,7 @@ class DynamicSoftLabelAssigner(BaseAssigner):
 
         cls_cost = cls_cost.sum(dim=-1)
 
-        cost_matrix = cls_cost + iou_cost * self.iou_factor
+        cost_matrix = cls_cost + iou_cost * self.iou_factor + dis_cost
 
         matched_pred_ious, matched_gt_inds = self.dynamic_k_matching(
             cost_matrix, pairwise_ious, num_gt, valid_mask

@@ -1,4 +1,5 @@
 from .box_transform import bbox2distance, distance2bbox
+from .key_point_transform import distance2keypoints, keypoints2distance
 from .check_point import (
     convert_avg_params,
     convert_old_model,
@@ -18,6 +19,8 @@ from .visualization import Visualizer, overlay_bbox_cv
 __all__ = [
     "distance2bbox",
     "bbox2distance",
+    "distance2keypoints",
+    "keypoints2distance",
     "convert_old_model",
     "load_model_weight",
     "save_model",

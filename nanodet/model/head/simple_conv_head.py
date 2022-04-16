@@ -70,7 +70,7 @@ class SimpleConvHead(nn.Module):
             self.feat_channels, self.cls_out_channels, 3, padding=1
         )
         self.gfl_reg = nn.Conv2d(
-            self.feat_channels, 8 * (self.reg_max + 1), 3, padding=1
+            self.feat_channels, 12 * (self.reg_max + 1), 3, padding=1
         )
         self.scales = nn.ModuleList([Scale(1.0) for _ in self.strides])
 

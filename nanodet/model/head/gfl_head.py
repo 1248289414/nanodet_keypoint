@@ -62,8 +62,8 @@ class Integral(nn.Module):
                 offsets from the box center in four directions, shape (N, 4).
         """
         shape = x.size()
-        x = F.softmax(x.reshape(*shape[:-1], 8, self.reg_max + 1), dim=-1)
-        x = F.linear(x, self.project.type_as(x)).reshape(*shape[:-1], 8)
+        x = F.softmax(x.reshape(*shape[:-1], 12, self.reg_max + 1), dim=-1)
+        x = F.linear(x, self.project.type_as(x)).reshape(*shape[:-1], 12)
         return x
 
 
