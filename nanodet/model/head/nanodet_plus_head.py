@@ -161,7 +161,10 @@ class NanoDetPlusHead(nn.Module):
         gt_bboxes = gt_meta["gt_bboxes"]
         gt_labels = gt_meta["gt_labels"]
 
-        gt_keypoints = [torch.tensor(i, dtype=torch.float32).repeat(1,2).numpy() for i in gt_bboxes]
+        gt_keypoints = [np.tile(i,(1, 2)) for i in gt_bboxes]
+        for i in gt_keypoints:
+            j = i.copy()
+            i[...,2],i[...,7],i[...,4],i[...,5] = j[...,0],j[...,1],j[...,2],j[...,3]
 
         device = preds.device
         batch_size = preds.shape[0]
@@ -425,11 +428,12 @@ class NanoDetPlusHead(nn.Module):
             result_list, img_widths, img_heights, img_ids, warp_matrixes
         ):
             det_result = {}
-            det_bboxes, det_labels = result
+            det_bboxes, det_labels, det_keypoints = result
             det_bboxes = det_bboxes.detach().cpu().numpy()
             det_bboxes[:, :4] = warp_boxes(
                 det_bboxes[:, :4], np.linalg.inv(warp_matrix), img_width, img_height
             )
+            det_keypoints = det_keypoints.detach().cpu().numpy()
             classes = det_labels.detach().cpu().numpy()
             for i in range(self.num_classes):
                 inds = classes == i
@@ -437,6 +441,7 @@ class NanoDetPlusHead(nn.Module):
                     [
                         det_bboxes[inds, :4].astype(np.float32),
                         det_bboxes[inds, 4:5].astype(np.float32),
+                        det_keypoints[inds, :].astype(np.float32),
                     ],
                     axis=1,
                 ).tolist()
@@ -484,16 +489,18 @@ class NanoDetPlusHead(nn.Module):
         center_priors = torch.cat(mlvl_center_priors, dim=1)
         dis_preds = self.distribution_project(reg_preds) * center_priors[..., 2, None]
         bboxes = distance2bbox(center_priors[..., :2], dis_preds, max_shape=input_shape)
+        keypoints = distance2keypoints(center_priors[..., :2], dis_preds[...,4:], max_shape=input_shape)
         scores = cls_preds.sigmoid()
         result_list = []
         for i in range(b):
             # add a dummy background class at the end of all labels
             # same with mmdetection2.0
-            score, bbox = scores[i], bboxes[i]
+            score, bbox, keypoint = scores[i], bboxes[i], keypoints[i]
             padding = score.new_zeros(score.shape[0], 1)
             score = torch.cat([score, padding], dim=1)
             results = multiclass_nms(
                 bbox,
+                keypoint,
                 score,
                 score_thr=0.05,
                 nms_cfg=dict(type="nms", iou_threshold=0.6),

@@ -26,13 +26,14 @@ def overlay_bbox_cv(img, dets, class_names, score_thresh):
     all_box = []
     for label in dets:
         for bbox in dets[label]:
-            score = bbox[-1]
+            score = bbox[4]
             if score > score_thresh:
                 x0, y0, x1, y1 = [int(i) for i in bbox[:4]]
-                all_box.append([label, x0, y0, x1, y1, score])
+                keypoints = [int(i) for i in bbox[5:]]
+                all_box.append([label, x0, y0, x1, y1, score, keypoints])
     all_box.sort(key=lambda v: v[5])
     for box in all_box:
-        label, x0, y0, x1, y1, score = box
+        label, x0, y0, x1, y1, score, keypoints = box
         # color = self.cmap(i)[:3]
         color = (_COLORS[label] * 255).astype(np.uint8).tolist()
         text = "{}:{:.1f}%".format(class_names[label], score * 100)
@@ -48,6 +49,10 @@ def overlay_bbox_cv(img, dets, class_names, score_thresh):
             color,
             -1,
         )
+
+        for x, y in [keypoints[i:i+2] for i in range(0, len(keypoints), 2)]:
+            cv2.circle(img, (x,y), 2, (0,0,255), 2)
+
         cv2.putText(img, text, (x0, y0 - 1), font, 0.5, txt_color, thickness=1)
     return img
 

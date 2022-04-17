@@ -3,7 +3,7 @@ from torchvision.ops import nms
 
 
 def multiclass_nms(
-    multi_bboxes, multi_scores, score_thr, nms_cfg, max_num=-1, score_factors=None
+    multi_bboxes, multi_keypoints, multi_scores, score_thr, nms_cfg, max_num=-1, score_factors=None
 ):
     """NMS for multi-class bboxes.
 
@@ -29,6 +29,7 @@ def multiclass_nms(
         bboxes = multi_bboxes.view(multi_scores.size(0), -1, 4)
     else:
         bboxes = multi_bboxes[:, None].expand(multi_scores.size(0), num_classes, 4)
+        keypoints = multi_keypoints[:, None].expand(multi_scores.size(0), num_classes, 8)
     scores = multi_scores[:, :-1]
 
     # filter out boxes with low scores
@@ -40,6 +41,9 @@ def multiclass_nms(
     bboxes = torch.masked_select(
         bboxes, torch.stack((valid_mask, valid_mask, valid_mask, valid_mask), -1)
     ).view(-1, 4)
+    keypoints = torch.masked_select(
+        keypoints, torch.stack((valid_mask, valid_mask, valid_mask, valid_mask, valid_mask, valid_mask, valid_mask, valid_mask), -1)
+    ).view(-1, 8)
     if score_factors is not None:
         scores = scores * score_factors[:, None]
     scores = torch.masked_select(scores, valid_mask)
@@ -48,13 +52,14 @@ def multiclass_nms(
     if bboxes.numel() == 0:
         bboxes = multi_bboxes.new_zeros((0, 5))
         labels = multi_bboxes.new_zeros((0,), dtype=torch.long)
+        keypoints = multi_bboxes.new_zeros((0, 8))
 
         if torch.onnx.is_in_onnx_export():
             raise RuntimeError(
                 "[ONNX Error] Can not record NMS "
                 "as it has not been executed this time"
             )
-        return bboxes, labels
+        return bboxes, labels, keypoints
 
     dets, keep = batched_nms(bboxes, scores, labels, nms_cfg)
 
@@ -62,7 +67,7 @@ def multiclass_nms(
         dets = dets[:max_num]
         keep = keep[:max_num]
 
-    return dets, labels[keep]
+    return dets, labels[keep], keypoints[keep]
 
 
 def batched_nms(boxes, scores, idxs, nms_cfg, class_agnostic=False):
