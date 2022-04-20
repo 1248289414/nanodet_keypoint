@@ -217,23 +217,21 @@ def warp_boxes(boxes, M, width, height):
         return boxes
 
 
-# def warp_keypoints(keypoints, M, width, height):
-#     n = len(keypoints)
-#     if n:
-#         # warp points
-#         xy = np.ones((n * 4, 3))
-#         # x1y1, x2y2, x1y2, x2y1
-#         xy[:, :2] = boxes[:, [0, 1, 2, 3, 0, 3, 2, 1]].reshape(n * 4, 2)
-#         xy = xy @ M.T  # transform
-#         xy = (xy[:, :2] / xy[:, 2:3]).reshape(n, 8)  # rescale
-#         # create new boxes
-#         x = xy[:, [0, 2, 4, 6]]
-#         y = xy[:, [1, 3, 5, 7]]
-#         xy = np.concatenate((x.min(1), y.min(1), x.max(1), y.max(1))).reshape(4, n).T
-#         # clip boxes
-#         xy[:, [0, 2]] = xy[:, [0, 2]].clip(0, width)
-#         xy[:, [1, 3]] = xy[:, [1, 3]].clip(0, height)
-#         return xy
+def warp_keypoints(keypoints, M, width, height):
+    n = len(keypoints)
+    if n:
+        # warp points
+        xy = np.ones((n * 4, 3))
+        # x1y1, x2y2, x1y2, x2y1
+        xy[:, :2] = keypoints.reshape(n * 4, 2)
+        xy = xy @ M.T  # transform
+        xy = (xy[:, :2] / xy[:, 2:3]).reshape(n, 8)  # rescale
+        # clip
+        xy[:, [0, 2, 4, 6]] = xy[:, [0, 2, 4, 6]].clip(0, width)
+        xy[:, [1, 3, 5 ,7]] = xy[:, [1, 3, 5 ,7]].clip(0, height)
+        return xy
+    else:
+        return keypoints
 
 
 def get_minimum_dst_shape(

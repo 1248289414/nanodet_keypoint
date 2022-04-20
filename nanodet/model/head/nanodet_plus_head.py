@@ -7,7 +7,7 @@ import torch.nn as nn
 
 from nanodet.util import bbox2distance, distance2bbox, keypoints2distance, multi_apply, overlay_bbox_cv, distance2keypoints
 
-from ...data.transform.warp import warp_boxes
+from ...data.transform.warp import warp_boxes, warp_keypoints
 from ..loss.gfocal_loss import DistributionFocalLoss, QualityFocalLoss
 from ..loss.iou_loss import GIoULoss
 from ..module.conv import ConvModule, DepthwiseConvModule
@@ -434,6 +434,7 @@ class NanoDetPlusHead(nn.Module):
                 det_bboxes[:, :4], np.linalg.inv(warp_matrix), img_width, img_height
             )
             det_keypoints = det_keypoints.detach().cpu().numpy()
+            det_keypoints = warp_keypoints(det_keypoints, np.linalg.inv(warp_matrix), img_width, img_height)
             classes = det_labels.detach().cpu().numpy()
             for i in range(self.num_classes):
                 inds = classes == i

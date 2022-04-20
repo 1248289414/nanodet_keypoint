@@ -51,7 +51,7 @@ def overlay_bbox_cv(img, dets, class_names, score_thresh):
         )
 
         for x, y in [keypoints[i:i+2] for i in range(0, len(keypoints), 2)]:
-            cv2.circle(img, (x,y), 2, (0,0,255), 2)
+            cv2.circle(img, (x,y), 2, (0,255,0), 2)
 
         cv2.putText(img, text, (x0, y0 - 1), font, 0.5, txt_color, thickness=1)
     return img

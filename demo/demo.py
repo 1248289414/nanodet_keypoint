@@ -146,9 +146,9 @@ def main():
                 result_frame = predictor.visualize(res[0], meta, cfg.class_names, 0.35)
                 if args.save_result:
                     vid_writer.write(result_frame)
-                ch = cv2.waitKey(1)
-                if ch == 27 or ch == ord("q") or ch == ord("Q"):
-                    break
+                # ch = cv2.waitKey(1)
+                # if ch == 27 or ch == ord("q") or ch == ord("Q"):
+                #     break
             else:
                 break
 
