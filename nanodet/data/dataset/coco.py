@@ -113,7 +113,7 @@ class CocoDataset(BaseDataset):
             if gt_keypoints:
                 annotation["keypoints"] = np.array(gt_keypoints, dtype=np.float32)
             else:
-                annotation["keypoints"] = np.zeros((0, 51), dtype=np.float32)
+                raise Exception("annotation much have keypoints")
         return annotation
 
     def get_train_data(self, idx):
@@ -129,7 +129,12 @@ class CocoDataset(BaseDataset):
         if img is None:
             print("image {} read failed.".format(image_path))
             raise FileNotFoundError("Cant load image! Please check image path!")
-        ann = self.get_img_annotation(idx)
+        try:
+            ann = self.get_img_annotation(idx)
+        except Exception:
+            print("image {} has wrong annotation.".format(image_path))
+            exit()
+
         meta = dict(
             img=img, img_info=img_info, gt_bboxes=ann["bboxes"], gt_labels=ann["labels"]
         )
