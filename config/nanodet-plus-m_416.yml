@@ -28,7 +28,7 @@ model:
       activation: LeakyReLU
     head:
       name: NanoDetPlusHead
-      num_classes: 2
+      num_classes: 36
       input_channel: 96
       feat_channels: 96
       stacked_convs: 2
@@ -53,7 +53,7 @@ model:
     # Auxiliary head, only use in training time.
     aux_head:
       name: SimpleConvHead
-      num_classes: 2
+      num_classes: 36
       input_channel: 192
       feat_channels: 192
       stacked_convs: 4
@@ -63,10 +63,11 @@ model:
 data:
   train:
     name: CocoDataset
-    img_path: workspace/roco/roco_val
-    ann_path: workspace/roco/roco_val.json
+    img_path: workspace/2021-RMUC-0417-0916/images
+    ann_path: workspace/2021-RMUC-0417-0916/Annotations.json
     input_size: [416,416] #[w,h]
     keep_ratio: False
+    use_keypoint: True
     pipeline:
       perspective: 0.0
       scale: [0.6, 1.4]
@@ -81,10 +82,11 @@ data:
       normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
   val:
     name: CocoDataset
-    img_path: workspace/roco/roco_val
-    ann_path: workspace/roco/roco_val.json
+    img_path: workspace/2021-RMUC-0417-0916/images
+    ann_path: workspace/2021-RMUC-0417-0916/Annotations.json
     input_size: [416,416] #[w,h]
     keep_ratio: False
+    use_keypoint: True
     pipeline:
       normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
 device:
@@ -115,4 +117,7 @@ evaluator:
 log:
   interval: 50
 
-class_names: ['armor_blue', 'armor_red']
+class_names: ['blue_G', 'blue_1', 'blue_2', 'blue_3', 'blue_4', 'blue_5', 'blue_O', 'blue_Bs', 'blue_Bb', 
+'red_G', 'red_1', 'red_2', 'red_3', 'red_4', 'red_5', 'red_O', 'red_Bs', 'red_Bb', 
+'none_G', 'none_1', 'none_2', 'none_3', 'none_4', 'none_5', 'none_O', 'none_Bs', 'none_Bb', 
+'purple_G', 'purple_1', 'purple_2', 'purple_3', 'purple_4', 'purple_5', 'purple_O', 'purple_Bs', 'purple_Bb']

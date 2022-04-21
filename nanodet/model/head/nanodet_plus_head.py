@@ -160,11 +160,7 @@ class NanoDetPlusHead(nn.Module):
         """
         gt_bboxes = gt_meta["gt_bboxes"]
         gt_labels = gt_meta["gt_labels"]
-
-        gt_keypoints = [np.tile(i,(1, 2)) for i in gt_bboxes]
-        for i in gt_keypoints:
-            j = i.copy()
-            i[...,2],i[...,7],i[...,4],i[...,5] = j[...,0],j[...,1],j[...,2],j[...,3]
+        gt_keypoints = gt_meta["gt_keypoints"]
 
         device = preds.device
         batch_size = preds.shape[0]
